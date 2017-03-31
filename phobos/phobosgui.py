@@ -274,6 +274,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('phobos.define_geometry')
         kc2.operator('phobos.set_collision_group')
         kc2.operator('phobos.smoothen_surface')
+        kc1.operator('phobos.set_origin_to_com', text="Set Origin to COM")
 
         # Masses, Inertia & Hardware
         layout.separator()

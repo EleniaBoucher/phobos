@@ -557,6 +557,55 @@ class SmoothenSurfaceOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
+
+class SetOriginToCOMOperator(Operator):
+    """Set origin to center of mass"""
+    bl_idname = "phobos.set_origin_to_com"
+    bl_label = "Set Origin to COM"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    com_shift = FloatVectorProperty(
+        name="CAD Origin Shift",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="Offset of distance between objects")
+
+    cursor_location = FloatVectorProperty(
+        name="CAD Origin",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="Distance between objects")
+
+    def execute(self, context):
+        # TODO complete this and check for errors
+        master = context.active_object
+        slaves = context.selected_objects
+        to_cadorigin = self.cursor_location - master.matrix_world.to_translation()
+        com_shift_world = to_cadorigin + self.com_shift
+        for s in slaves:
+            sUtils.selectObjects([s], True, 0)
+            context.scene.cursor_location = s.matrix_world.to_translation() + com_shift_world
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+        sUtils.selectObjects(slaves, True, slaves.index(master))
+        context.scene.cursor_location = self.cursor_location.copy()
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.cursor_location = context.scene.cursor_location.copy()
+        return self.execute(context)
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
+
+
 class CreateInertialOperator(Operator):
     """Create inertial objects based on existing links"""
     bl_idname = "phobos.create_inertial_objects"
