@@ -49,6 +49,7 @@ import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
+import phobos.utils.editing as eUtils
 import phobos.model.joints as joints
 import phobos.model.sensors as sensors
 import phobos.model.links as links
@@ -1175,6 +1176,77 @@ class CreateMimicJointOperator(Operator):
                            "link", context.selected_objects))
         return (ob is not None and ob.phobostype == 'link'
                 and len(objs) > 1)
+
+
+class InstantiateAssembly(Operator):
+    """Attach motor values to selected joints"""
+    bl_idname = "phobos.instantiate_assembly"
+    bl_label = "Instantiate Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "motortype", text="motor_type")
+        if not self.motortype == 'none':
+            layout.prop(self, "taumax", text="maximum torque [Nm]")
+            layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+            if self.motortype == 'PID':
+                layout.prop(self, "P", text="P")
+                layout.prop(self, "I", text="I")
+                layout.prop(self, "D", text="D")
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
+            self.taumax = aObject['joint/maxeffort']
+            self.vmax = aObject['joint/maxvelocity']
+        return self.execute(context)
+
+    def execute(self, context):
+        objs = (obj for obj in context.selected_objects if obj.phobostype == "link")
+        for joint in objs:
+            # add motor properties
+            if not self.motortype == 'none':
+                # TODO: these keys have to be adapted
+                if self.motortype == 'PID':
+                    joint['motor/p'] = self.P
+                    joint['motor/i'] = self.I
+                    joint['motor/d'] = self.D
+                joint['motor/maxSpeed'] = self.vmax
+                joint['motor/maxEffort'] = self.taumax
+                joint['motor/type'] = self.motortype
+            # delete motor properties for none type
+            else:
+                for key in joint.keys():
+                    if key.startswith('motor/'):
+                        del joint[key]
+        return {'FINISHED'}
+
+
+class ConnectInterfacesOperator(Operator):
+    """Connects assemblies at interfaces"""
+    bl_idname = "phobos.connect_interfaces"
+    bl_label = "Connect Interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        interfaces_only = True
+        for obj in context.selected_objects:
+            if obj.phobostype != 'interface':
+                interfaces_only = False
+        return interfaces_only
+
+    def execute(self, context):
+        # the following code assumes that two interfaces are selected,
+        # one of which is the active object>
+        pi = 0 if context.selected_objects[0] == context.active_object else 1
+        ci = 0 if pi == 1 else 1
+        parentinterface = context.selected_objects[pi]
+        childinterface = context.selected_objects[ci]
+        eUtils.connectInterfaces(parentinterface, childinterface)
+        return {'FINISHED'}
 
 
 def register():

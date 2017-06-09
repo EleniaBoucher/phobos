@@ -438,6 +438,21 @@ class PhobosImportPanel(bpy.types.Panel):
         self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
 
 
+class PhobosAssembliesPanel(bpy.types.Panel):
+    bl_idname = "TOOLS_ASSEMBLIES_PT_PHOBOS"
+    bl_label = "Assemblies"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        #self.layout.label(icon='IMPORT')
+        pass
+
+    def draw(self, context):
+        self.layout.operator("phobos.connect_interfaces", icon="IMPORT")
+
+
 class PhobosObjectPanel(bpy.types.Panel):
     bl_idname = "phobos.PT_PHOBOS"
     bl_label = "phobos: Object Panel Displaying Custom Properties"
@@ -524,6 +539,7 @@ def register():
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)
     #bpy.utils.register_class(PhobosScenePanel)
+    bpy.utils.register_class(PhobosAssembliesPanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
     bpy.utils.register_class(PhobosObjectPanel)
