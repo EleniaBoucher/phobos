@@ -1179,48 +1179,27 @@ class CreateMimicJointOperator(Operator):
 
 
 class InstantiateAssembly(Operator):
-    """Attach motor values to selected joints"""
+    """Instantiate an assembly"""
     bl_idname = "phobos.instantiate_assembly"
     bl_label = "Instantiate Assembly"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def getAssembliesListForEnumProperty(self, context):
+        assemblieslist = [a.name for a in bpy.data.groups if not a.name.endswith('interfaces')]
+        return [(a,)*3 for a in assemblieslist]
 
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "motortype", text="motor_type")
-        if not self.motortype == 'none':
-            layout.prop(self, "taumax", text="maximum torque [Nm]")
-            layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
-            if self.motortype == 'PID':
-                layout.prop(self, "P", text="P")
-                layout.prop(self, "I", text="I")
-                layout.prop(self, "D", text="D")
+    assemblyname = EnumProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        items=getAssembliesListForEnumProperty
+    )
 
     def invoke(self, context, event):
-        aObject = context.active_object
-        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
-            self.taumax = aObject['joint/maxeffort']
-            self.vmax = aObject['joint/maxvelocity']
-        return self.execute(context)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        objs = (obj for obj in context.selected_objects if obj.phobostype == "link")
-        for joint in objs:
-            # add motor properties
-            if not self.motortype == 'none':
-                # TODO: these keys have to be adapted
-                if self.motortype == 'PID':
-                    joint['motor/p'] = self.P
-                    joint['motor/i'] = self.I
-                    joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax
-                joint['motor/maxEffort'] = self.taumax
-                joint['motor/type'] = self.motortype
-            # delete motor properties for none type
-            else:
-                for key in joint.keys():
-                    if key.startswith('motor/'):
-                        del joint[key]
+        eUtils.instantiateAssembly(self.assemblyname)
         return {'FINISHED'}
 
 

@@ -28,6 +28,8 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
 from . import selection as sUtils
+from phobos.phoboslog import log
+
 
 def addDictionaryToObj(dict, obj, category=None):
     for key, value in dict:
@@ -59,7 +61,7 @@ def instantiateAssembly(assemblyname):
     bpy.ops.object.group_instance_add(group=interfaces.name) #location=(2.85218e-09, 0.0958416, 1.20279), layers=())
     interfaceobj = bpy.context.active_object
     bpy.ops.object.duplicates_make_real()
-    sUtils.selectobjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
+    sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
                                   if a.type == 'EMPTY' and a.name.endswith('interfaces')],
@@ -69,10 +71,20 @@ def instantiateAssembly(assemblyname):
 
 def connectInterfaces(parentinterface, childinterface):
     childassembly = childinterface.parent
-    sUtils.selectobjects(objects=[childinterface], clear=True, active=0)
+    sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    sUtils.selectobjects(objects=[childinterface, childassembly], clear=True, active=0)
+    sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
-    sUtils.selectobjects(objects=[parentinterface, childinterface], clear=True, active=0)
+    sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
 
+
+def getPropertiesSubset(obj, category=None):
+    if not category:
+        category = obj.phobostype
+    try:
+        dict = {key.replace(category+'/', ''): value
+                for key, value in obj.items() if key.startswith(category+'/')}
+    except KeyError:
+        log("Failed filtering properties for category " + category, "ERROR")
+    return dict

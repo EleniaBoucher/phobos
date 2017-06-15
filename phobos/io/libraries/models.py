@@ -36,11 +36,19 @@ from phobos.phoboslog import log
 
 def getModelListForEnumProperty(self, context):
     category = context.window_manager.category
-    return preview_collections[category].enum_items
+    try:
+        items = preview_collections[category].enum_items
+    except KeyError:
+        items = []
+    return items
 
 
 def getCategoriesForEnumProperty(self, context):
-    return [(category,)*3 for category in sorted(preview_collections.keys())]
+    try:
+        categories = [(category,) * 3 for category in sorted(preview_collections.keys())]
+    except:
+        categories = []
+    return categories
 
 
 def compileModelList():

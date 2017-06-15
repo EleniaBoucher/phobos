@@ -450,7 +450,8 @@ class PhobosAssembliesPanel(bpy.types.Panel):
         pass
 
     def draw(self, context):
-        self.layout.operator("phobos.connect_interfaces", icon="IMPORT")
+        self.layout.operator("phobos.instantiate_assembly")
+        self.layout.operator("phobos.connect_interfaces")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
