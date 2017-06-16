@@ -443,7 +443,7 @@ class PhobosAssembliesPanel(bpy.types.Panel):
     bl_label = "Assemblies"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_category = 'Phobos'
+    bl_category = 'Phobos Models'
 
     def draw_header(self, context):
         #self.layout.label(icon='IMPORT')
