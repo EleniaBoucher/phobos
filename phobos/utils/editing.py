@@ -45,7 +45,7 @@ def getCombinedTransform(obj, effectiveparent):
     return matrix
 
 
-def instantiateAssembly(assemblyname):
+def instantiateAssembly(assemblyname, instancename):
     assembly = None
     interfaces = None
     for group in bpy.data.groups:
@@ -56,10 +56,13 @@ def instantiateAssembly(assemblyname):
                 assembly = group
     if not assembly or not interfaces:
         raise RuntimeError('Assembly and/or interfaces templates do not exist.')
-    bpy.ops.object.group_instance_add(group=assembly.name) #location=(2.85218e-09, 0.0958416, 1.20279), layers=())
+    bpy.ops.object.group_instance_add(group=assembly.name)
     assemblyobj = bpy.context.active_object
-    bpy.ops.object.group_instance_add(group=interfaces.name) #location=(2.85218e-09, 0.0958416, 1.20279), layers=())
-    interfaceobj = bpy.context.active_object
+    assemblyobj.phobostype = 'assembly'
+    assemblyobj['assemblyname'] = assemblyname
+    assemblyobj.name = instancename
+    bpy.ops.object.group_instance_add(group=interfaces.name)
+    #interfaceobj = bpy.context.active_object
     bpy.ops.object.duplicates_make_real()
     sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
@@ -75,8 +78,13 @@ def connectInterfaces(parentinterface, childinterface):
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
+    childinterface.matrix_world = parentinterface.matrix_world
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
+    try:
+        del childassembly['modelname']
+    except KeyError:
+        pass
 
 
 def getPropertiesSubset(obj, category=None):

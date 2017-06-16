@@ -1194,7 +1194,16 @@ class InstantiateAssembly(Operator):
         items=getAssembliesListForEnumProperty
     )
 
+    instancename = StringProperty(
+        name="Instance name",
+        default=''
+    )
+
     def invoke(self, context, event):
+        i = 0
+        while self.assemblyname+'_'+str(i) in bpy.data.objects:
+            i+=1
+        self.instancename = self.assemblyname+'_'+str(i)
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
@@ -1211,17 +1220,14 @@ class ConnectInterfacesOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        interfaces_only = True
-        for obj in context.selected_objects:
-            if obj.phobostype != 'interface':
-                interfaces_only = False
-        return interfaces_only
+        if context.active_object is None or len(context.selected_objects) > 2:
+            return False
+        else:
+            return all([obj.phobostype == 'interface' for obj in context.selected_objects])
 
     def execute(self, context):
-        # the following code assumes that two interfaces are selected,
-        # one of which is the active object>
         pi = 0 if context.selected_objects[0] == context.active_object else 1
-        ci = 0 if pi == 1 else 1
+        ci = int(not pi)  #0 if pi == 1 else 1
         parentinterface = context.selected_objects[pi]
         childinterface = context.selected_objects[ci]
         eUtils.connectInterfaces(parentinterface, childinterface)
