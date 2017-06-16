@@ -424,7 +424,6 @@ class PhobosExportPanel(bpy.types.Panel):
 
 
 class PhobosImportPanel(bpy.types.Panel):
-    """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_IMPORT_PT_PHOBOS"
     bl_label = "Import"
     bl_space_type = 'VIEW_3D'
@@ -435,7 +434,7 @@ class PhobosImportPanel(bpy.types.Panel):
         self.layout.label(icon='IMPORT')
 
     def draw(self, context):
-        self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
+        self.layout.operator("phobos.import_robot_model", icon="IMPORT")
 
 
 class PhobosAssembliesPanel(bpy.types.Panel):
